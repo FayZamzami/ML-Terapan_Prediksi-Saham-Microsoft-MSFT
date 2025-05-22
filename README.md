@@ -153,8 +153,6 @@ Nilai RMSE yang rendah (0.0110) dan R² yang tinggi (0.9973) menunjukkan bahwa m
 
 Namun, Directional Accuracy sebesar 47.44% menunjukkan bahwa model hanya sedikit lebih baik dari acak dalam memprediksi arah pergerakan harga (naik/turun). Hal ini mengindikasikan bahwa meskipun model sangat baik dalam memprediksi nilai absolut harga saham, model masih memiliki keterbatasan dalam memprediksi arah pergerakannya.
 
-![Visualisasi Prediksi vs Aktual](path_to_visualization_image)
-
 ### Kesimpulan Evaluasi
 
 Model Linear Regression terbukti menjadi pilihan terbaik untuk prediksi harga saham Microsoft dengan akurasi yang tinggi dalam hal nilai absolut (RMSE rendah, R² tinggi). Namun, untuk aplikasi trading yang membutuhkan prediksi arah yang akurat, model ini masih perlu dikembangkan lebih lanjut.
