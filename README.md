@@ -23,6 +23,10 @@ Melalui penggunaan machine learning dan analisis data, investor dapat memanfaatk
 
 ## Data Understanding
 Dataset yang digunakan berisi data historis harga saham Microsoft dari tahun 1986 hingga 2025. Dataset ini mencakup informasi harian tentang harga pembukaan, tertinggi, terendah, penutupan, serta volume perdagangan.
+Dataset dapat di dapat dan di akses dari [kaggle](https://www.kaggle.com/datasets/muhammadatiflatif/complete-microsoft-stock-dataset-19862025?resource=download) sesuai dengan [Yahoo Finance](https://finance.yahoo.com/quote/MSFT/history/?period1=511108200&period2=1747802492) yang merupakan sumber terpercaya untuk data pasar saham.
+
+- Kaggle : https://www.kaggle.com/datasets/muhammadatiflatif/complete-microsoft-stock-dataset-19862025?resource=download
+- Yahoo Finance : https://finance.yahoo.com/quote/MSFT/history/?period1=511108200&period2=1747802492
 
 **Informasi Dataset:**
 - **Sumber:** Yahoo Finance / Dataset Historis
