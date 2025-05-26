@@ -151,6 +151,198 @@ Untuk meningkatkan kemampuan prediksi model, dilakukan feature engineering denga
 ### Normalisasi
 Untuk memastikan semua fitur memiliki skala yang sama, dilakukan normalisasi menggunakan MinMaxScaler.
 
+### A. Alur Kerja Data Preparation
+Data preparation dilakukan dalam urutan sistematis berikut:
+1. Konversi format data temporal
+2. Feature engineering dan transformasi
+3. Penanganan data bermasalah (missing values, outliers)
+4. Seleksi dan reduksi fitur
+5. Normalisasi data
+6. Pembagian dataset
+
+### B. Penjelasan Detail Setiap Tahapan
+
+#### 1. Konversi Format Data Temporal
+```python
+df['date'] = pd.to_datetime(df['date'])
+```
+**Sistem Kerja:**
+- Mengkonversi string tanggal menjadi objek datetime pandas
+- Memungkinkan operasi temporal dan ekstraksi fitur tanggal
+
+**Parameter yang Digunakan:**
+- `format`: Otomatis terdeteksi (default)
+- `errors`: 'raise' (default) - menampilkan error jika konversi gagal
+
+#### 2. Feature Engineering
+
+##### 2.1 Price Range Categorization
+```python
+df['price_range'] = pd.cut(df['close'], 
+                          bins=[0, 50, 100, 150, 200, 250, 300],
+                          labels=['0-50', '50-100', '100-150', 
+                                 '150-200', '200-250', '250-300'])
+```
+**Sistem Kerja:**
+- Membagi data harga ke dalam kategori berdasarkan rentang nilai
+- Menciptakan kategori ordinal untuk analisis
+
+**Parameter:**
+- `bins`: List nilai batas untuk setiap kategori
+- `labels`: Nama untuk setiap kategori
+- `include_lowest`: True (default) - termasuk nilai batas bawah
+
+##### 2.2 Technical Indicators
+```python
+# Moving Averages
+for window in [7, 14, 30]:
+    df[f'close_ma{window}'] = df['close'].rolling(window=window).mean()
+    df[f'volume_ma{window}'] = df['volume'].rolling(window=window).mean()
+
+# RSI Calculation
+def calculate_rsi(data, window=14):
+    delta = data.diff()
+    gain = delta.where(delta > 0, 0)
+    loss = -delta.where(delta < 0, 0)
+    avg_gain = gain.rolling(window=window).mean()
+    avg_loss = loss.rolling(window=window).mean()
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+```
+**Parameter Technical Indicators:**
+- Moving Average windows: 7, 14, 30 hari
+- RSI window: 14 hari (standar industri)
+- MACD parameters: 
+  - Short window: 12
+  - Long window: 26
+  - Signal window: 9
+
+#### 3. Penanganan Data Bermasalah
+
+##### 3.1 Missing Values
+```python
+# Identifikasi missing values
+missing_values = df.isnull().sum()
+missing_percentage = (missing_values / len(df)) * 100
+
+# Penanganan
+df_cleaned = df.dropna()
+```
+**Sistem Kerja:**
+- Menghitung jumlah dan persentase missing values
+- Menghapus baris dengan missing values
+- Memverifikasi hasil pembersihan
+
+##### 3.2 Outlier Treatment dengan Winsorization
+```python
+def handle_outliers(df, column, n_sigmas=3):
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+    
+    lower_bound = Q1 - n_sigmas * IQR
+    upper_bound = Q3 + n_sigmas * IQR
+    
+    df[column] = np.clip(df[column], lower_bound, upper_bound)
+    return df
+```
+**Parameter Winsorization:**
+- `n_sigmas`: 3 (menggunakan 3 IQR untuk batas)
+- `quantiles`: 0.25 (Q1) dan 0.75 (Q3)
+
+#### 4. Feature Selection dan Reduksi Dimensi
+
+##### 4.1 Penanganan Multikolinearitas
+```python
+def remove_collinear(df, threshold=0.85):
+    corr_matrix = df.corr().abs()
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+    collinear_features = [column for column in upper.columns 
+                         if any(upper[column] > threshold)]
+    return [col for col in df.columns if col not in collinear_features]
+```
+**Parameter:**
+- `threshold`: 0.85 (batas korelasi untuk menentukan multikolinearitas)
+- `correlation method`: Pearson correlation (default)
+
+#### 5. Normalisasi Data
+```python
+scaler = MinMaxScaler()
+X_scaled = scaler.fit_transform(X)
+
+target_scaler = MinMaxScaler()
+y_scaled = target_scaler.fit_transform(y.reshape(-1, 1))
+```
+**Sistem Kerja:**
+- Mengubah skala fitur ke range [0,1]
+- Menyimpan scaler untuk inverse transform
+
+**Parameter MinMaxScaler:**
+- `feature_range`: (0,1) - range target untuk scaling
+- `copy`: True - membuat copy data asli
+
+#### 6. Train-Test-Validation Split
+```python
+train_size = int(len(X_scaled) * 0.7)
+val_size = int(len(X_scaled) * 0.15)
+
+X_train = X_scaled[:train_size]
+X_val = X_scaled[train_size:train_size+val_size]
+X_test = X_scaled[train_size+val_size:]
+```
+**Parameter Split:**
+- Training set: 70% data
+- Validation set: 15% data
+- Test set: 15% data
+
+### C. Alasan Pemilihan Parameter
+
+1. **Window Sizes untuk Technical Indicators**
+   - 7 hari: Tren jangka pendek
+   - 14 hari: Tren menengah (standar industri untuk RSI)
+   - 30 hari: Tren jangka panjang
+
+2. **Threshold Multikolinearitas (0.85)**
+   - Nilai 0.85 dipilih sebagai keseimbangan antara:
+     - Menghilangkan redundansi yang signifikan
+     - Mempertahankan informasi yang potensial berguna
+
+3. **IQR Multiplier untuk Outliers (3)**
+   - Menggunakan 3 IQR untuk:
+     - Menangkap outlier yang ekstrem
+     - Mempertahankan variasi natural dalam data finansial
+
+4. **Train-Test-Validation Split (70:15:15)**
+   - 70% training: Cukup data untuk pembelajaran model
+   - 15% validation: Cukup untuk tuning hyperparameter
+   - 15% testing: Cukup untuk evaluasi final
+
+### D. Output yang Dihasilkan
+
+1. **Dataset yang Bersih**
+   - Tanpa missing values
+   - Outlier tertangani
+   - Format data yang konsisten
+
+2. **Feature Set yang Optimal**
+   - Fitur teknikal yang relevan
+   - Multikolinearitas minimal
+   - Skala yang dinormalisasi
+
+3. **Split Dataset**
+   - Training set untuk pembelajaran model
+   - Validation set untuk tuning
+   - Test set untuk evaluasi final
+
+### E. Verifikasi Hasil
+
+Setiap tahap preparation diverifikasi dengan:
+1. Pengecekan statistik deskriptif
+2. Visualisasi distribusi
+3. Validasi integritas data
+4. Konfirmasi tidak ada kebocoran data antara split
+
 ## Modeling
 Dalam proyek ini, dilakukan perbandingan beberapa model machine learning untuk menemukan yang terbaik:
 
