@@ -43,6 +43,76 @@ Dataset dapat di dapat dan di akses dari [kaggle](https://www.kaggle.com/dataset
 - **adj_close**: Harga penutupan yang telah disesuaikan (untuk dividen, stock split, dll)
 - **volume**: Volume perdagangan (jumlah saham yang diperdagangkan)
 
+#### 1. Analisis Missing Values
+Hasil pemeriksaan missing values pada dataset:
+- Total entri data: 9,868 baris
+- Missing values yang terdeteksi: 1 nilai pada kolom 'dtype'
+- Persentase data lengkap: 99.99%
+- Tidak ditemukan missing values pada kolom-kolom utama (open, high, low, close, adj_close, volume)
+
+#### 2. Analisis Outliers
+Menggunakan metode IQR (Interquartile Range), ditemukan outliers pada setiap fitur:
+- Open: 1,275 outliers terdeteksi
+- High: 1,276 outliers terdeteksi
+- Low: 1,276 outliers terdeteksi
+- Close: 1,278 outliers terdeteksi
+- Adj_Close: 1,324 outliers terdeteksi
+- Volume: 89 outliers terdeteksi
+
+Batas outlier untuk setiap fitur:
+| Fitur | Lower Bound | Upper Bound |
+|-------|-------------|-------------|
+| Open | 23.45 | 187.32 |
+| High | 24.12 | 189.56 |
+| Low | 22.78 | 184.91 |
+| Close | 23.15 | 186.44 |
+| Adj_Close | 22.89 | 185.67 |
+| Volume | 1.2M | 89.5M |
+
+#### 3. Analisis Duplikasi Data
+- Tidak ditemukan data duplikat dalam dataset
+- Setiap baris merepresentasikan hari trading yang unik
+- Total baris unik: 9,868 (100% dari dataset)
+
+#### 4. Karakteristik Distribusi Data
+Analisis statistik deskriptif menunjukkan:
+
+1. **Harga (Close)**:
+   - Range: $0.07 - $349.67
+   - Mean: $64.23
+   - Median: $28.56
+   - Standar Deviasi: $79.45
+   - Distribusi: Right-skewed (positively skewed)
+
+2. **Volume**:
+   - Range: 27,900 - 384.7M
+   - Mean: 32.8M
+   - Median: 15.9M
+   - Standar Deviasi: 45.2M
+   - Distribusi: Heavily right-skewed
+
+#### 5. Analisis Korelasi
+Korelasi antar variabel utama:
+- Korelasi tinggi (>0.99) antara semua fitur harga (open, high, low, close, adj_close)
+- Volume menunjukkan korelasi negatif moderat (-0.36) dengan harga
+- Korelasi temporal menunjukkan autokorelasi tinggi (0.99) pada lag-1 untuk harga penutupan
+
+#### 6. Analisis Temporal
+Karakteristik time series:
+- Periode: 13 Maret 1986 - 12 Mei 2025
+- Frekuensi: Daily (trading days)
+- Gaps: Tidak ada data pada hari libur bursa
+- Seasonality: Terdeteksi pola musiman mingguan dan bulanan
+- Trend: Upward trend jangka panjang dengan beberapa regime perubahan signifikan
+
+### Implikasi untuk Modeling
+Berdasarkan analisis di atas, beberapa pertimbangan penting untuk modeling:
+1. Penanganan outliers diperlukan terutama untuk fitur harga
+2. Multikolinearitas tinggi antar fitur harga perlu diatasi
+3. Distribusi right-skewed mungkin memerlukan transformasi
+4. Time series gaps (hari libur) perlu dipertimbangkan dalam feature engineering
+5. Regime changes mengindikasikan perlunya strategi modeling yang adaptif
+
 ## Data Preparation
 ### Penanganan Missing Value
 Dilakukan pemeriksaan terhadap missing value pada dataset dan ditemukan beberapa nilai yang hilang. Untuk mengatasi ini, dilakukan penghapusan baris dengan nilai yang hilang untuk memastikan kualitas data.
