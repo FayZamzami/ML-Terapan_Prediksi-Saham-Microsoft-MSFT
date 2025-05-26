@@ -352,6 +352,107 @@ Dalam proyek ini, dilakukan perbandingan beberapa model machine learning untuk m
 4. **Gradient Boosting**: Ensemble model yang membangun model secara bertahap untuk meminimalkan error.
 5. **LSTM (Long Short-Term Memory)**: Model neural network yang dirancang untuk data time series.
 
+### 1. Linear Regression
+**Parameter yang digunakan:**
+- `fit_intercept=True`: Mengizinkan model untuk menghitung intercept
+- `normalize=False`: Data sudah dinormalisasi pada tahap preprocessing
+- `copy_X=True`: Membuat salinan data untuk menghindari modifikasi data asli
+
+**Fungsi parameter:**
+- `fit_intercept`: Menentukan apakah akan menghitung konstanta (intercept) atau memaksa garis regresi melalui origin
+- `normalize`: Mengontrol normalisasi fitur sebelum regresi
+- `copy_X`: Mengontrol apakah X akan disalin sebelum fitting
+
+### 2. Random Forest
+**Parameter yang digunakan:**
+- `n_estimators=100`: Jumlah pohon dalam forest
+- `max_depth=10`: Kedalaman maksimum setiap pohon
+- `min_samples_split=2`: Minimum sampel yang diperlukan untuk split internal
+- `min_samples_leaf=1`: Minimum sampel yang diperlukan di node daun
+- `random_state=42`: Seed untuk reproduktifitas
+
+**Fungsi parameter:**
+- `n_estimators`: Mengontrol jumlah pohon untuk meningkatkan akurasi dan mengurangi overfitting
+- `max_depth`: Membatasi kompleksitas model dan mencegah overfitting
+- `min_samples_split`: Mengontrol minimum sampel yang diperlukan untuk membagi node internal
+- `min_samples_leaf`: Mengontrol minimum sampel yang harus ada di setiap node daun
+- `random_state`: Memastikan hasil yang konsisten antar running
+
+### 3. XGBoost
+**Parameter yang digunakan:**
+- `learning_rate=0.1`: Tingkat pembelajaran
+- `max_depth=6`: Kedalaman maksimum pohon
+- `n_estimators=100`: Jumlah boosting rounds
+- `subsample=0.8`: Fraksi sampel yang digunakan
+- `colsample_bytree=0.8`: Fraksi fitur yang digunakan per pohon
+- `objective='reg:squarederror'`: Fungsi objektif untuk regresi
+
+**Fungsi parameter:**
+- `learning_rate`: Mengontrol seberapa besar model menyesuaikan bobot di setiap langkah
+- `max_depth`: Membatasi kompleksitas setiap pohon
+- `n_estimators`: Menentukan jumlah iterasi boosting
+- `subsample`: Mencegah overfitting dengan menggunakan subset data
+- `colsample_bytree`: Mencegah overfitting dengan menggunakan subset fitur
+- `objective`: Menentukan fungsi loss yang akan dioptimalkan
+
+### 4. Gradient Boosting
+**Parameter yang digunakan:**
+- `learning_rate=0.1`: Tingkat pembelajaran
+- `n_estimators=100`: Jumlah boosting stages
+- `max_depth=3`: Kedalaman maksimum pohon individual
+- `min_samples_split=2`: Minimum sampel untuk split
+- `min_samples_leaf=1`: Minimum sampel di node daun
+- `subsample=1.0`: Fraksi sampel untuk fitting
+
+**Fungsi parameter:**
+- `learning_rate`: Mengontrol kontribusi setiap pohon
+- `n_estimators`: Menentukan jumlah pohon secara berurutan
+- `max_depth`: Mengontrol kompleksitas setiap pohon
+- `min_samples_split`: Mengontrol minimum sampel untuk split node
+- `min_samples_leaf`: Mengontrol minimum sampel di node daun
+- `subsample`: Mengontrol fraksi sampel yang digunakan untuk fitting
+
+### 5. LSTM (Long Short-Term Memory)
+**Parameter yang digunakan:**
+- `units=50`: Jumlah unit LSTM di setiap layer
+- `dropout=0.2`: Tingkat dropout untuk regularisasi
+- `epochs=100`: Jumlah epoch training
+- `batch_size=32`: Ukuran batch
+- `optimizer='adam'`: Optimizer yang digunakan
+- `loss='mean_squared_error'`: Fungsi loss
+
+**Fungsi parameter:**
+- `units`: Menentukan kompleksitas model dan kapasitas pembelajaran
+- `dropout`: Mencegah overfitting dengan menonaktifkan unit secara acak
+- `epochs`: Mengontrol berapa kali model melihat seluruh dataset
+- `batch_size`: Mengontrol jumlah sampel yang diproses sebelum update model
+- `optimizer`: Mengatur bagaimana model memperbarui bobotnya
+- `loss`: Menentukan bagaimana error dihitung dan diminimalisir
+
+### Perbandingan Parameter Sebelum dan Sesudah Tuning
+
+#### Random Forest
+**Sebelum tuning:**
+- `n_estimators=100`
+- `max_depth=10`
+- `min_samples_split=2`
+
+**Setelah tuning:**
+- `n_estimators=150`
+- `max_depth=8`
+- `min_samples_split=5`
+
+#### XGBoost
+**Sebelum tuning:**
+- `learning_rate=0.1`
+- `max_depth=6`
+- `subsample=0.8`
+
+**Setelah tuning:**
+- `learning_rate=0.05`
+- `max_depth=4`
+- `subsample=0.9`
+
 ### Pemilihan Model Terbaik
 
 Setelah melakukan evaluasi terhadap kelima model, Linear Regression terpilih sebagai model terbaik untuk prediksi harga saham Microsoft. Meskipun model ini adalah yang paling sederhana, tetapi menunjukkan performa terbaik dengan RMSE terendah dan R² tertinggi pada dataset validasi.
@@ -362,11 +463,11 @@ Linear Regression dipilih karena:
 
 2. **Efisiensi Komputasi**: Memerlukan sumber daya komputasi yang jauh lebih kecil dibandingkan model kompleks seperti LSTM atau Random Forest.
 
-3. **Interpretabilitas**: Koefisien model dapat diinterpretasikan secara langsung, memungkinkan pemahaman lebih baik tentang hubungan antara fitur dan harga saham.
+3. **Interpretabilitas**: Koefisien model dapat diinterpretasikan secara langsung, memungkinkan pemahaman lebih baik tentang hubungan antara fitur dan harga saham. Koefisien yang jelas dan mudah diinterpretasi, Hubungan linear yang kuat antara fitur dan target serta Tidak ada black box dalam pengambilan keputusan.
 
 4. **Generalisiasi**: Menunjukkan kapasitas generalisasi yang baik tanpa overfitting pada data training.
 
-5. **Stabilitas**: Performa model tetap konsisten antara data validasi dan testing.
+5. **Stabilitas**: Performa model tetap konsisten antara data validasi dan testing, Variance rendah dalam prediksi dan Robust terhadap noise dalam data
 
 Meskipun model tree-based seperti Random Forest dan XGBoost biasanya lebih mampu menangkap hubungan non-linear dalam data, pergerakan harga saham Microsoft tampaknya memiliki komponen linear yang kuat yang dapat ditangkap dengan baik oleh Linear Regression, terutama setelah feature engineering yang komprehensif.
 
