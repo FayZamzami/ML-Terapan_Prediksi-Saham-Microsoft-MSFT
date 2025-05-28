@@ -511,49 +511,84 @@ Dalam proyek prediksi harga saham Microsoft ini, evaluasi model dilakukan dengan
 ### Perbandingan Hasil Evaluasi Sebelum dan Sesudah Hyperparameter Tuning
 
 #### 1. Linear Regression
-| Metrik | Sebelum Tuning | Setelah Tuning | Perubahan |
-|--------|----------------|----------------|-----------|
-| RMSE | 0.0112 | 0.0110 | ↓ 0.0002 |
-| MAE | 0.0060 | 0.0058 | ↓ 0.0002 |
-| MAPE | 1.12% | 1.09% | ↓ 0.03% |
-| R² | 0.9971 | 0.9973 | ↑ 0.0002 |
-| Directional Accuracy | 47.12% | 47.44% | ↑ 0.32% |
+
+| Metrik | Nilai |
+|--------|-------|
+| RMSE | 0.0026 |
+| MAE | 0.0018 |
+| MAPE | 1.02% |
+| R² | 0.9955 |
+| Directional Accuracy | 49.18% |
 
 #### 2. Random Forest
-| Metrik | Sebelum Tuning | Setelah Tuning | Perubahan |
-|--------|----------------|----------------|-----------|
-| RMSE | 0.0185 | 0.0165 | ↓ 0.0020 |
-| MAE | 0.0092 | 0.0082 | ↓ 0.0010 |
-| MAPE | 1.89% | 1.65% | ↓ 0.24% |
-| R² | 0.9945 | 0.9952 | ↑ 0.0007 |
-| Directional Accuracy | 46.85% | 47.12% | ↑ 0.27% |
+
+| Metrik | Nilai |
+|--------|-------|
+| RMSE | 0.0039 |
+| MAE | 0.0028 |
+| MAPE | 1.52% |
+| R² | 0.9902 |
+| Directional Accuracy | 49.73% |
 
 #### 3. XGBoost
-| Metrik | Sebelum Tuning | Setelah Tuning | Perubahan |
-|--------|----------------|----------------|-----------|
-| RMSE | 0.0178 | 0.0158 | ↓ 0.0020 |
-| MAE | 0.0088 | 0.0079 | ↓ 0.0009 |
-| MAPE | 1.82% | 1.62% | ↓ 0.20% |
-| R² | 0.9948 | 0.9955 | ↑ 0.0007 |
-| Directional Accuracy | 46.92% | 47.25% | ↑ 0.33% |
+
+| Metrik | Nilai |
+|--------|-------|
+| RMSE | 0.0031 |
+| MAE | 0.0022 |
+| MAPE | 1.20% |
+| R² | 0.9938 |
+| Directional Accuracy | 49.57% |
 
 #### 4. Gradient Boosting
-| Metrik | Sebelum Tuning | Setelah Tuning | Perubahan |
-|--------|----------------|----------------|-----------|
-| RMSE | 0.0182 | 0.0162 | ↓ 0.0020 |
-| MAE | 0.0090 | 0.0081 | ↓ 0.0009 |
-| MAPE | 1.85% | 1.64% | ↓ 0.21% |
-| R² | 0.9946 | 0.9954 | ↑ 0.0008 |
-| Directional Accuracy | 46.88% | 47.18% | ↑ 0.30% |
+
+| Metrik | Nilai |
+|--------|-------|
+| RMSE | 0.0029 |
+| MAE | 0.0021 |
+| MAPE | 1.15% |
+| R² | 0.9943 |
+| Directional Accuracy | 48.87% |
 
 #### 5. LSTM
-| Metrik | Sebelum Tuning | Setelah Tuning | Perubahan |
-|--------|----------------|----------------|-----------|
-| RMSE | 0.0195 | 0.0172 | ↓ 0.0023 |
-| MAE | 0.0098 | 0.0085 | ↓ 0.0013 |
-| MAPE | 1.95% | 1.72% | ↓ 0.23% |
-| R² | 0.9942 | 0.9950 | ↑ 0.0008 |
-| Directional Accuracy | 46.75% | 47.05% | ↑ 0.30% |
+
+| Metrik | Nilai |
+|--------|-------|
+| RMSE | 0.0944 |
+| MAE | 0.0859 |
+| MAPE | 44.98% |
+| R² | -4.8421 |
+| Directional Accuracy | 50.67% |
+
+
+### Analisis Performa Model
+
+1. **Linear Regression**
+   - Menunjukkan performa terbaik dengan RMSE terendah (0.0026)
+   - MAE sangat baik (0.0018) menunjukkan prediksi yang akurat
+   - MAPE 1.02% mengindikasikan error persentase yang sangat kecil
+   - R² tinggi (0.9955) menunjukkan model menjelaskan variasi data dengan sangat baik
+
+2. **Random Forest**
+   - RMSE (0.0039) sedikit lebih tinggi dari Linear Regression
+   - Directional Accuracy tertinggi kedua (49.73%)
+   - R² masih sangat baik (0.9902)
+
+3. **XGBoost**
+   - Performa menengah dengan RMSE 0.0031
+   - MAPE 1.20% menunjukkan akurasi yang baik
+   - R² 0.9938 menunjukkan fit yang sangat baik
+
+4. **Gradient Boosting**
+   - Performa kedua terbaik setelah Linear Regression
+   - RMSE 0.0029 dan MAE 0.0021 sangat kompetitif
+   - R² 0.9943 menunjukkan model yang sangat baik
+
+5. **LSTM**
+   - Performa kurang baik dibandingkan model lain
+   - RMSE dan MAE jauh lebih tinggi
+   - R² negatif menunjukkan model tidak fit dengan data
+   - Meskipun memiliki Directional Accuracy tertinggi (50.67%)
 
 
 ### Metrik Evaluasi yang Digunakan
