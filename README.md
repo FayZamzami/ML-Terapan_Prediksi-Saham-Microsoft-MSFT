@@ -353,6 +353,9 @@ Dalam proyek ini, dilakukan perbandingan beberapa model machine learning untuk m
 5. **LSTM (Long Short-Term Memory)**: Model neural network yang dirancang untuk data time series.
 
 ### 1. Linear Regression
+
+Model ini menggunakan parameter default dari scikit-learn karena tidak ada parameter yang diatur secara eksplisit dalam kode.
+
 **Parameter yang digunakan:**
 - `fit_intercept=True`: Mengizinkan model untuk menghitung intercept
 - `normalize=False`: Data sudah dinormalisasi pada tahap preprocessing
@@ -363,71 +366,101 @@ Dalam proyek ini, dilakukan perbandingan beberapa model machine learning untuk m
 - `normalize`: Mengontrol normalisasi fitur sebelum regresi
 - `copy_X`: Mengontrol apakah X akan disalin sebelum fitting
 
+**Cara kerja:**
+- Model mencari hubungan linear optimal antara fitur input dan target
+- Menggunakan metode least squares untuk meminimalkan error
+- Menghasilkan koefisien untuk setiap fitur dan intercept
+
 ### 2. Random Forest
 **Parameter yang digunakan:**
 - `n_estimators=100`: Jumlah pohon dalam forest
-- `max_depth=10`: Kedalaman maksimum setiap pohon
-- `min_samples_split=2`: Minimum sampel yang diperlukan untuk split internal
-- `min_samples_leaf=1`: Minimum sampel yang diperlukan di node daun
 - `random_state=42`: Seed untuk reproduktifitas
 
 **Fungsi parameter:**
-- `n_estimators`: Mengontrol jumlah pohon untuk meningkatkan akurasi dan mengurangi overfitting
-- `max_depth`: Membatasi kompleksitas model dan mencegah overfitting
-- `min_samples_split`: Mengontrol minimum sampel yang diperlukan untuk membagi node internal
-- `min_samples_leaf`: Mengontrol minimum sampel yang harus ada di setiap node daun
-- `random_state`: Memastikan hasil yang konsisten antar running
+- `n_estimators`: Menentukan jumlah pohon boosting yang akan dibangun secara berurutan. Setiap pohon baru mencoba memperbaiki kesalahan dari pohon sebelumnya. Nilai 100 memberikan cukup iterasi untuk model belajar tanpa overfitting.
+- `learning_rate`: Mengontrol seberapa besar kontribusi setiap pohon terhadap prediksi akhir. Nilai 0.1 adalah nilai default yang memberikan keseimbangan antara kecepatan pembelajaran dan stabilitas.
+random_state: Sama seperti Random Forest, parameter ini memastikan hasil yang konsisten dan dapat direproduksi antar running.
+
 
 ### 3. XGBoost
 **Parameter yang digunakan:**
-- `learning_rate=0.1`: Tingkat pembelajaran
-- `max_depth=6`: Kedalaman maksimum pohon
 - `n_estimators=100`: Jumlah boosting rounds
-- `subsample=0.8`: Fraksi sampel yang digunakan
-- `colsample_bytree=0.8`: Fraksi fitur yang digunakan per pohon
-- `objective='reg:squarederror'`: Fungsi objektif untuk regresi
+- `learning_rate=0.1`: Tingkat pembelajaran
+- `random_state=42`: Seed untuk reproduktifitas
 
 **Fungsi parameter:**
-- `learning_rate`: Mengontrol seberapa besar model menyesuaikan bobot di setiap langkah
-- `max_depth`: Membatasi kompleksitas setiap pohon
-- `n_estimators`: Menentukan jumlah iterasi boosting
-- `subsample`: Mencegah overfitting dengan menggunakan subset data
-- `colsample_bytree`: Mencegah overfitting dengan menggunakan subset fitur
-- `objective`: Menentukan fungsi loss yang akan dioptimalkan
+- `n_estimators`: Menentukan jumlah pohon boosting yang akan dibangun secara berurutan. Setiap pohon baru mencoba memperbaiki kesalahan dari pohon sebelumnya. Nilai 100 memberikan cukup iterasi untuk model belajar tanpa overfitting.
+- `learning_rate`: Mengontrol seberapa besar kontribusi setiap pohon terhadap prediksi akhir. Nilai 0.1 adalah nilai default yang memberikan keseimbangan antara kecepatan pembelajaran dan stabilitas.
+- `random_state`: Sama seperti Random Forest, parameter ini memastikan hasil yang konsisten dan dapat direproduksi antar running.
 
 ### 4. Gradient Boosting
 **Parameter yang digunakan:**
-- `learning_rate=0.1`: Tingkat pembelajaran
 - `n_estimators=100`: Jumlah boosting stages
-- `max_depth=3`: Kedalaman maksimum pohon individual
-- `min_samples_split=2`: Minimum sampel untuk split
-- `min_samples_leaf=1`: Minimum sampel di node daun
-- `subsample=1.0`: Fraksi sampel untuk fitting
+- `learning_rate=0.1`: Tingkat pembelajaran
 
 **Fungsi parameter:**
-- `learning_rate`: Mengontrol kontribusi setiap pohon
-- `n_estimators`: Menentukan jumlah pohon secara berurutan
-- `max_depth`: Mengontrol kompleksitas setiap pohon
-- `min_samples_split`: Mengontrol minimum sampel untuk split node
-- `min_samples_leaf`: Mengontrol minimum sampel di node daun
-- `subsample`: Mengontrol fraksi sampel yang digunakan untuk fitting
+- `n_estimators`: Mengontrol jumlah pohon boosting yang akan dibangun secara berurutan. Nilai 100 dipilih untuk memberikan cukup iterasi bagi model untuk belajar pola dalam data.
+- `learning_rate`: Mengontrol kontribusi setiap pohon dalam ensemble. Nilai 0.1 adalah default yang memberikan pembelajaran yang stabil.
+
+**Cara kerja:**
+- Membangun model weak learner secara sekuensial
+- Setiap model baru memperbaiki kesalahan model sebelumnya
+- Mengkombinasikan hasil prediksi dengan bobot
 
 ### 5. LSTM (Long Short-Term Memory)
 **Parameter yang digunakan:**
-- `units=50`: Jumlah unit LSTM di setiap layer
-- `dropout=0.2`: Tingkat dropout untuk regularisasi
-- `epochs=100`: Jumlah epoch training
-- `batch_size=32`: Ukuran batch
-- `optimizer='adam'`: Optimizer yang digunakan
-- `loss='mean_squared_error'`: Fungsi loss
+1. **Sequence Length:**
+   - `SEQUENCE_LENGTH = min(10, len(X_train) // 10)`: Panjang sequence yang ditentukan secara dinamis
+   - Contoh: Jika dataset memiliki 1000 data, maka SEQUENCE_LENGTH = 10
 
-**Fungsi parameter:**
-- `units`: Menentukan kompleksitas model dan kapasitas pembelajaran
-- `dropout`: Mencegah overfitting dengan menonaktifkan unit secara acak
-- `epochs`: Mengontrol berapa kali model melihat seluruh dataset
-- `batch_size`: Mengontrol jumlah sampel yang diproses sebelum update model
-- `optimizer`: Mengatur bagaimana model memperbarui bobotnya
-- `loss`: Menentukan bagaimana error dihitung dan diminimalisir
+2. **Data Requirements:**
+   - `len(X_train) > 100`: Minimal jumlah data yang diperlukan untuk LSTM
+   - Memastikan data cukup untuk membuat sequence yang bermakna
+
+**Fungsi Parameter:**
+
+1. **SEQUENCE_LENGTH:**
+   - Menentukan berapa banyak timesteps yang akan dilihat model untuk membuat prediksi
+   - Mengontrol panjang "memori" yang digunakan model
+   - Nilai dibatasi maksimal 10 untuk efisiensi komputasi
+   - Dihitung secara dinamis sebagai 1/10 dari panjang dataset atau maksimal 10
+
+2. **Fungsi create_sequences:**
+   ```python
+   def create_sequences(X, y, seq_length=SEQUENCE_LENGTH):
+       X_seq, y_seq = [], []
+       for i in range(len(X) - seq_length):
+           X_seq.append(X[i:(i + seq_length)])
+           y_seq.append(y[i + seq_length])
+       return np.array(X_seq), np.array(y_seq)
+   ```
+   - Input:
+     - `X`: Data fitur
+     - `y`: Data target
+     - `seq_length`: Panjang sequence (default: SEQUENCE_LENGTH)
+   - Output:
+     - `X_seq`: Array 3D dengan shape (samples, sequence_length, features)
+     - `y_seq`: Array 2D dengan shape (samples, 1)
+
+**Cara Kerja LSTM:**
+
+1. **Persiapan Data:**
+   - Memeriksa kecukupan data (minimal 100 data)
+   - Menentukan panjang sequence yang optimal
+   - Memformat data menjadi sequences menggunakan sliding window
+
+2. **Arsitektur LSTM:**
+   - Input shape: (SEQUENCE_LENGTH, n_features)
+   - Memory cells menyimpan informasi jangka panjang
+   - Gates mengontrol aliran informasi:
+     - Forget gate: Memutuskan informasi mana yang dibuang
+     - Input gate: Memutuskan nilai baru mana yang disimpan
+     - Output gate: Memutuskan bagian mana dari cell state yang akan output
+
+3. **Proses Training:**
+   - Model melihat SEQUENCE_LENGTH timesteps sekaligus
+   - Mempelajari pola dalam sequence untuk memprediksi nilai berikutnya
+   - Mengupdate weights berdasarkan error prediksi
 
 ### Perbandingan Parameter Sebelum dan Sesudah Tuning
 
