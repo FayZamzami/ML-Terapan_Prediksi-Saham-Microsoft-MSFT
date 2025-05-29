@@ -114,6 +114,17 @@ Berdasarkan analisis di atas, beberapa pertimbangan penting untuk modeling:
 5. Regime changes mengindikasikan perlunya strategi modeling yang adaptif
 
 ## Data Preparation
+
+### A. Alur Kerja Data Preparation
+
+Data preparation dilakukan dalam urutan sistematis berikut:
+1. Konversi format data temporal
+2. Penanganan data bermasalah (missing values, outliers)  
+3. Feature engineering dan transformasi 
+4. Seleksi dan reduksi fitur
+5. Normalisasi data
+6. Pembagian dataset
+
 ### Penanganan Missing Value
 Dilakukan pemeriksaan terhadap missing value pada dataset dan ditemukan beberapa nilai yang hilang. Untuk mengatasi ini, dilakukan penghapusan baris dengan nilai yang hilang untuk memastikan kualitas data.
 
@@ -136,6 +147,10 @@ for feature in numerical_features:
     df[feature] = np.where(df[feature] > upper_bound, upper_bound, df[feature])
 ```
 
+**Parameter Winsorization:**
+- `n_sigmas`: 3 (menggunakan 3 IQR untuk batas)
+- `quantiles`: 0.25 (Q1) dan 0.75 (Q3)
+
 ### Feature Engineering
 Untuk meningkatkan kemampuan prediksi model, dilakukan feature engineering dengan menambahkan berbagai indikator teknikal:
 
@@ -151,15 +166,6 @@ Untuk meningkatkan kemampuan prediksi model, dilakukan feature engineering denga
 ### Normalisasi
 Untuk memastikan semua fitur memiliki skala yang sama, dilakukan normalisasi menggunakan MinMaxScaler.
 
-### A. Alur Kerja Data Preparation
-Data preparation dilakukan dalam urutan sistematis berikut:
-1. Konversi format data temporal
-2. Feature engineering dan transformasi
-3. Penanganan data bermasalah (missing values, outliers)
-4. Seleksi dan reduksi fitur
-5. Normalisasi data
-6. Pembagian dataset
-
 ### B. Penjelasan Detail Setiap Tahapan
 
 #### 1. Konversi Format Data Temporal
@@ -174,9 +180,47 @@ df['date'] = pd.to_datetime(df['date'])
 - `format`: Otomatis terdeteksi (default)
 - `errors`: 'raise' (default) - menampilkan error jika konversi gagal
 
-#### 2. Feature Engineering
+#### 2. Penanganan Data Bermasalah
 
-##### 2.1 Price Range Categorization
+##### 2.1 Missing Values
+```python
+# Identifikasi missing values
+missing_values = df.isnull().sum()
+missing_percentage = (missing_values / len(df)) * 100
+
+# Penanganan
+df_cleaned = df.dropna()
+```
+**Sistem Kerja:**
+- Menghitung jumlah dan persentase missing values
+- Menghapus baris dengan missing values
+- Memverifikasi hasil pembersihan
+
+##### 2.2 Handling Outlier
+Outlier pada data saham dapat merepresentasikan momen penting dalam pasar, namun terlalu banyak outlier dapat mengganggu performa model. Penanganan outlier dilakukan dengan metode Winsorization, yang menggantikan nilai ekstrem dengan batas atas dan bawah (Q1 - 3*IQR dan Q3 + 3*IQR).
+
+```python
+# Menggunakan IQR method untuk semua fitur numerik utama
+for feature in numerical_features:
+    Q1 = df[feature].quantile(0.25)
+    Q3 = df[feature].quantile(0.75)
+    IQR = Q3 - Q1
+    
+    # Filter outlier lebih konservatif (3 IQR) untuk data keuangan
+    lower_bound = Q1 - 3 * IQR
+    upper_bound = Q3 + 3 * IQR
+    
+    # Winsorization sebagai alternatif menghapus outlier
+    df[feature] = np.where(df[feature] < lower_bound, lower_bound, df[feature])
+    df[feature] = np.where(df[feature] > upper_bound, upper_bound, df[feature])
+```
+
+**Parameter Winsorization:**
+- `n_sigmas`: 3 (menggunakan 3 IQR untuk batas)
+- `quantiles`: 0.25 (Q1) dan 0.75 (Q3)
+#### 3. Feature Engineering
+
+##### 3.1 Price Range Categorization
 ```python
 df['price_range'] = pd.cut(df['close'], 
                           bins=[0, 50, 100, 150, 200, 250, 300],
@@ -192,7 +236,7 @@ df['price_range'] = pd.cut(df['close'],
 - `labels`: Nama untuk setiap kategori
 - `include_lowest`: True (default) - termasuk nilai batas bawah
 
-##### 2.2 Technical Indicators
+##### 3.2 Technical Indicators
 ```python
 # Moving Averages
 for window in [7, 14, 30]:
@@ -217,39 +261,6 @@ def calculate_rsi(data, window=14):
   - Short window: 12
   - Long window: 26
   - Signal window: 9
-
-#### 3. Penanganan Data Bermasalah
-
-##### 3.1 Missing Values
-```python
-# Identifikasi missing values
-missing_values = df.isnull().sum()
-missing_percentage = (missing_values / len(df)) * 100
-
-# Penanganan
-df_cleaned = df.dropna()
-```
-**Sistem Kerja:**
-- Menghitung jumlah dan persentase missing values
-- Menghapus baris dengan missing values
-- Memverifikasi hasil pembersihan
-
-##### 3.2 Outlier Treatment dengan Winsorization
-```python
-def handle_outliers(df, column, n_sigmas=3):
-    Q1 = df[column].quantile(0.25)
-    Q3 = df[column].quantile(0.75)
-    IQR = Q3 - Q1
-    
-    lower_bound = Q1 - n_sigmas * IQR
-    upper_bound = Q3 + n_sigmas * IQR
-    
-    df[column] = np.clip(df[column], lower_bound, upper_bound)
-    return df
-```
-**Parameter Winsorization:**
-- `n_sigmas`: 3 (menggunakan 3 IQR untuk batas)
-- `quantiles`: 0.25 (Q1) dan 0.75 (Q3)
 
 #### 4. Feature Selection dan Reduksi Dimensi
 
