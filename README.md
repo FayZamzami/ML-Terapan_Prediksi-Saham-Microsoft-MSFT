@@ -569,10 +569,20 @@ XGBoost adalah implementasi optimized dari gradient boosting machines yang mengg
 **Parameter yang digunakan:**
 - `n_estimators=100`: Jumlah boosting stages
 - `learning_rate=0.1`: Tingkat pembelajaran
+- `random_state=42`: Seed untuk reproduktifitas
+- `max_depth=3`: Kedalaman maksimum setiap tree
+- `min_samples_split=2`: Minimum sampel untuk split internal
+- `min_samples_leaf=1`: Minimum sampel di setiap leaf node
+- `subsample=1.0`: Fraksi sampel untuk fitting
 
 **Fungsi parameter:**
 - `n_estimators`: Mengontrol jumlah pohon boosting yang akan dibangun secara berurutan. Nilai 100 dipilih untuk memberikan cukup iterasi bagi model untuk belajar pola dalam data.
 - `learning_rate`: Mengontrol kontribusi setiap pohon dalam ensemble. Nilai 0.1 adalah default yang memberikan pembelajaran yang stabil.
+- `random_state`: Memastikan hasil yang konsisten dan dapat direproduksi antar running.
+- `max_depth`: Membatasi kedalaman maksimum setiap tree untuk mencegah overfitting.
+- `min_samples_split`: Menentukan jumlah minimum sampel yang diperlukan untuk melakukan split pada node internal.
+- `min_samples_leaf`: Menentukan jumlah minimum sampel yang harus ada pada leaf node.
+- `subsample`: Menentukan fraksi sampel yang digunakan untuk fitting setiap tree.
 
 **Cara Kerja Detail:**
 1. **Sequential Learning**:
@@ -582,18 +592,26 @@ XGBoost adalah implementasi optimized dari gradient boosting machines yang mengg
 
 2. **Weak Learners**:
    - Menggunakan decision tree sederhana (shallow trees)
-   - Tree dibatasi kedalaman dan kompleksitasnya
+   - Tree dibatasi kedalaman (`max_depth=3`) untuk mencegah overfitting
+   - Setiap tree harus memenuhi kriteria minimum samples (`min_samples_split` dan `min_samples_leaf`)
    - Fokus pada generalisasi daripada memorisasi
 
 3. **Additive Training**:
    - Model final adalah penjumlahan dari semua tree
-   - Setiap tree diberi bobot sesuai learning rate
+   - Setiap tree diberi bobot sesuai learning rate (0.1)
    - Proses iteratif untuk meminimalkan loss function
+   - Menggunakan subsample data (100%) untuk setiap tree
+
+4. **Regularisasi**:
+   - Pembatasan kedalaman tree (`max_depth=3`)
+   - Penggunaan learning rate kecil (0.1)
+   - Kriteria minimum samples untuk splitting dan leaf nodes
   
 **Kelebihan untuk Prediksi Saham:**
 - Performa baik untuk data dengan trend
 - Robust terhadap outliers
 - Fleksibel dalam penanganan berbagai tipe data
+- Kemampuan regularisasi built-in untuk mencegah overfitting
 
 ### 5. LSTM (Long Short-Term Memory)
 **Parameter yang digunakan:**
