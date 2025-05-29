@@ -416,10 +416,10 @@ Dalam proyek ini, dilakukan perbandingan beberapa model machine learning untuk m
 
 ### 1. Linear Regression
 
-Model ini menggunakan parameter default dari scikit-learn karena tidak ada parameter yang diatur secara eksplisit dalam kode.
+Model ini menggunakan parameter default dari scikit-learn karena tidak ada parameter yang diatur secara eksplisit dalam kode
 
 **Parameter yang digunakan:**
-- `fit_intercept=True`: Mengizinkan model untuk menghitung intercept
+- `fit_intercept=True`: Mengizinkan model untuk menghitung intercept, Mengizinkan model untuk menghitung intercept (β₀)
 - `normalize=False`: Data sudah dinormalisasi pada tahap preprocessing
 - `copy_X=True`: Membuat salinan data untuk menghindari modifikasi data asli
 
@@ -429,31 +429,141 @@ Model ini menggunakan parameter default dari scikit-learn karena tidak ada param
 - `copy_X`: Mengontrol apakah X akan disalin sebelum fitting
 
 **Cara kerja:**
-- Model mencari hubungan linear optimal antara fitur input dan target
-- Menggunakan metode least squares untuk meminimalkan error
-- Menghasilkan koefisien untuk setiap fitur dan intercept
+- Model mencari hubungan linear antara fitur (X) dan target (y) dengan formula: y = β₀ + β₁X₁ + β₂X₂ + ... + βₙXₙ
+- Menggunakan metode Ordinary Least Squares (OLS) untuk meminimalkan jumlah kuadrat error
+- Menghasilkan koefisien untuk setiap fitur dan intercept, Menghasilkan koefisien (β) untuk setiap fitur yang menunjukkan kontribusinya terhadap prediksi
+
+**Kelebihan untuk Prediksi Saham:**
+- Interpretabilitas tinggi: Dapat melihat kontribusi setiap fitur
+- Komputasi cepat dan efisien
+- Cocok untuk hubungan linear dalam data finansial
 
 ### 2. Random Forest
+
 **Parameter yang digunakan:**
 - `n_estimators=100`: Jumlah pohon dalam forest
 - `random_state=42`: Seed untuk reproduktifitas
+- `max_features='auto'`
 
 **Fungsi parameter:**
 - `n_estimators`: Menentukan jumlah pohon boosting yang akan dibangun secara berurutan. Setiap pohon baru mencoba memperbaiki kesalahan dari pohon sebelumnya. Nilai 100 memberikan cukup iterasi untuk model belajar tanpa overfitting.
+      - Lebih banyak trees = hasil lebih stabil
+      - Trade-off dengan waktu komputasi
 - `learning_rate`: Mengontrol seberapa besar kontribusi setiap pohon terhadap prediksi akhir. Nilai 0.1 adalah nilai default yang memberikan keseimbangan antara kecepatan pembelajaran dan stabilitas.
 random_state: Sama seperti Random Forest, parameter ini memastikan hasil yang konsisten dan dapat direproduksi antar running.
+- `max_features='auto'`: Jumlah fitur yang dipertimbangkan untuk setiap split, Mempengaruhi diversity antar trees
 
+**Cara Kerja Detail:**
+
+1. **Ensemble Learning**
+   - Mengkombinasikan banyak model (decision trees) untuk membuat satu model yang lebih kuat
+   - Setiap tree memberikan "suara" untuk hasil prediksi final
+   - Hasil akhir adalah rata-rata prediksi dari semua trees (untuk regresi)
+   - Mengurangi overfitting yang umumnya terjadi pada single decision tree
+
+2. **Decision Trees dalam Random Forest**
+   - Setiap tree dibangun menggunakan algoritma CART (Classification and Regression Trees)
+   - Trees dibiarkan tumbuh dalam (deep) tanpa pruning
+   - Setiap node memilih split terbaik berdasarkan kriteria seperti:
+     * Mean Squared Error (MSE) untuk regresi
+     * Gini impurity atau entropy untuk klasifikasi
+
+3. **Bagging (Bootstrap Aggregating)**
+   - Setiap tree dilatih pada subset data yang berbeda
+   - Subset dibuat dengan random sampling with replacement (bootstrap)
+   - Biasanya ~63.2% data unik digunakan untuk setiap tree
+   - Sisa ~36.8% data (out-of-bag/OOB) digunakan untuk validasi
+
+4. **Random Feature Selection**
+   - Pada setiap split node, hanya subset acak dari fitur yang dipertimbangkan
+   - Jumlah fitur yang dipilih biasanya sqrt(n_features) untuk klasifikasi
+   - Untuk regresi, biasanya n_features/3 fitur yang dipilih
+   - Meningkatkan diversity antar trees dan mengurangi korelasi
+
+5. **Proses Prediksi**
+   - Setiap sampel data melewati semua trees
+   - Setiap tree memberikan prediksi independen
+   - Prediksi final adalah rata-rata dari semua prediksi tree
+  
+**Kelebihan untuk Prediksi Saham:**
+- Dapat menangkap hubungan non-linear dalam data
+- Robust terhadap outlier
+- Memberikan feature importance scores
 
 ### 3. XGBoost
-**Parameter yang digunakan:**
-- `n_estimators=100`: Jumlah boosting rounds
-- `learning_rate=0.1`: Tingkat pembelajaran
-- `random_state=42`: Seed untuk reproduktifitas
 
-**Fungsi parameter:**
-- `n_estimators`: Menentukan jumlah pohon boosting yang akan dibangun secara berurutan. Setiap pohon baru mencoba memperbaiki kesalahan dari pohon sebelumnya. Nilai 100 memberikan cukup iterasi untuk model belajar tanpa overfitting.
-- `learning_rate`: Mengontrol seberapa besar kontribusi setiap pohon terhadap prediksi akhir. Nilai 0.1 adalah nilai default yang memberikan keseimbangan antara kecepatan pembelajaran dan stabilitas.
-- `random_state`: Sama seperti Random Forest, parameter ini memastikan hasil yang konsisten dan dapat direproduksi antar running.
+**Konsep Dasar:**
+XGBoost adalah implementasi optimized dari gradient boosting machines yang menggabungkan multiple weak learners (decision trees) secara sekuensial dengan fokus pada optimasi dan kinerja.
+
+**Parameter Kunci dan Fungsinya:**
+- `learning_rate=0.1`: Mengontrol kontribusi setiap tree
+  * Nilai kecil = model lebih robust tapi butuh lebih banyak trees
+- `n_estimators=100`: Jumlah boosting rounds
+  * Dapat dikombinasikan dengan early stopping
+- `max_depth=6`: Kedalaman maksimum tree
+  * Mengontrol kompleksitas model
+- `min_child_weight=1`: Minimum sum of instance weight dalam child
+  * Membantu mengontrol over-fitting
+- `subsample=0.8`: Fraksi sampel yang digunakan per tree
+  * Menambah randomness untuk mencegah overfitting
+- `colsample_bytree=0.8`: Fraksi fitur per tree
+  * Mirip dengan random feature selection di Random Forest
+
+**Cara Kerja Detail:**
+
+1. **Gradient Boosting Framework**
+   - Membangun model secara bertahap (additive training)
+   - Setiap iterasi fokus pada sampel yang sulit diprediksi
+   - Menggunakan gradient descent untuk optimasi
+   - Proses:
+     * Inisialisasi model dengan prediksi konstan
+     * Menghitung residual (error) untuk setiap sampel
+     * Melatih tree baru untuk memprediksi residual
+     * Menambahkan tree ke model dengan bobot learning rate
+
+2. **Optimasi Objektif**
+   - Menggunakan fungsi objektif: Loss + Regularization
+   - Loss function mengukur seberapa baik model memprediksi
+   - Regularization mencegah overfitting:
+     * L1 (Lasso) regularization pada weights
+     * L2 (Ridge) regularization pada weights
+     * Regularization pada kompleksitas tree
+
+3. **Fitur-fitur Unggulan**
+   
+   a. **Penanganan Missing Values**
+   - Pembelajaran optimal direction untuk missing values
+   - Menentukan secara otomatis arah split terbaik
+   - Tidak perlu imputasi manual
+
+   b. **Split Finding Algorithms**
+   - Approximate algorithm untuk data besar
+   - Exact greedy algorithm untuk data kecil-menengah
+   - Weighted quantile sketch untuk proposal split
+
+   c. **Built-in Cross-Validation**
+   - Early stopping untuk mencegah overfitting
+   - Evaluasi model pada setiap iterasi
+   - Dapat menggunakan multiple metrik evaluasi
+
+4. **System Optimization**
+   - Paralelisasi pembuatan tree
+   - Cache-aware access
+   - Blocks for out-of-core computation
+   - Penanganan data sparse yang efisien
+
+**Keunggulan untuk Time Series:**
+1. **Penanganan Non-linearitas**
+   - Dapat menangkap hubungan kompleks dalam data
+   - Efektif untuk pola musiman dan tren
+
+2. **Feature Importance**
+   - Memberikan insight tentang fitur yang paling berpengaruh
+   - Membantu dalam feature selection dan engineering
+
+3. **Regularization**
+   - Mencegah overfitting pada data historis
+   - Meningkatkan generalisasi untuk prediksi masa depan
 
 ### 4. Gradient Boosting
 **Parameter yang digunakan:**
@@ -464,10 +574,26 @@ random_state: Sama seperti Random Forest, parameter ini memastikan hasil yang ko
 - `n_estimators`: Mengontrol jumlah pohon boosting yang akan dibangun secara berurutan. Nilai 100 dipilih untuk memberikan cukup iterasi bagi model untuk belajar pola dalam data.
 - `learning_rate`: Mengontrol kontribusi setiap pohon dalam ensemble. Nilai 0.1 adalah default yang memberikan pembelajaran yang stabil.
 
-**Cara kerja:**
-- Membangun model weak learner secara sekuensial
-- Setiap model baru memperbaiki kesalahan model sebelumnya
-- Mengkombinasikan hasil prediksi dengan bobot
+**Cara Kerja Detail:**
+1. **Sequential Learning**:
+   - Membangun tree secara berurutan
+   - Setiap tree baru memperbaiki kesalahan tree sebelumnya
+   - Menggunakan gradient descent untuk minimalisasi loss
+
+2. **Weak Learners**:
+   - Menggunakan decision tree sederhana (shallow trees)
+   - Tree dibatasi kedalaman dan kompleksitasnya
+   - Fokus pada generalisasi daripada memorisasi
+
+3. **Additive Training**:
+   - Model final adalah penjumlahan dari semua tree
+   - Setiap tree diberi bobot sesuai learning rate
+   - Proses iteratif untuk meminimalkan loss function
+  
+**Kelebihan untuk Prediksi Saham:**
+- Performa baik untuk data dengan trend
+- Robust terhadap outliers
+- Fleksibel dalam penanganan berbagai tipe data
 
 ### 5. LSTM (Long Short-Term Memory)
 **Parameter yang digunakan:**
@@ -523,6 +649,12 @@ random_state: Sama seperti Random Forest, parameter ini memastikan hasil yang ko
    - Model melihat SEQUENCE_LENGTH timesteps sekaligus
    - Mempelajari pola dalam sequence untuk memprediksi nilai berikutnya
    - Mengupdate weights berdasarkan error prediksi
+
+**Kelebihan untuk Prediksi Saham:**
+- Sangat baik untuk data time series
+- Dapat menangkap dependencies jangka panjang
+- Mempertimbangkan urutan temporal data
+- Mampu menangkap pola non-linear kompleks
 
 ### Perbandingan Parameter Sebelum dan Sesudah Tuning
 
