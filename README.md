@@ -264,19 +264,70 @@ def calculate_rsi(data, window=14):
 
 #### 4. Feature Selection dan Reduksi Dimensi
 
-##### 4.1 Penanganan Multikolinearitas
-```python
-def remove_collinear(df, threshold=0.85):
-    corr_matrix = df.corr().abs()
-    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-    collinear_features = [column for column in upper.columns 
-                         if any(upper[column] > threshold)]
-    return [col for col in df.columns if col not in collinear_features]
-```
-**Parameter:**
-- `threshold`: 0.85 (batas korelasi untuk menentukan multikolinearitas)
-- `correlation method`: Pearson correlation (default)
+##### 4.1 Pembuatan Variabel Target
+Dalam proyek ini, kami membuat tiga jenis variabel target yang berbeda:
 
+1. **Next-day Closing Price (target_nextday_close)**
+```python
+df['target_nextday_close'] = df['close'].shift(-1)  # Prediksi harga besok
+```
+- Merupakan target utama yang digunakan dalam model
+- Menggunakan fungsi `shift(-1)` untuk mengambil harga penutupan hari berikutnya
+- Baris terakhir akan memiliki NaN karena tidak ada data untuk hari berikutnya
+
+2. **Price Direction (target_direction)**
+```python
+df['target_direction'] = np.where(df['close'].shift(-1) > df['close'], 1, 0)
+```
+- Target binary (0/1) untuk klasifikasi arah pergerakan harga
+- 1: Harga naik di hari berikutnya
+- 0: Harga turun di hari berikutnya
+
+3. **Future Return (target_return)**
+```python
+df['target_return'] = df['close'].pct_change(-1)
+```
+- Menghitung persentase perubahan harga untuk hari berikutnya
+- Berguna untuk analisis return investasi
+
+##### 4.2 Persiapan Data untuk Seleksi Fitur
+```python
+# Konversi fitur kategorikal ke numerik
+df['price_range_numeric'] = pd.cut(df['close'],
+                                  bins=[0, 50, 100, 150, 200, 250, 300],
+                                  labels=False)
+
+# Menghapus kolom non-numerik dan target lainnya
+columns_to_drop = ['date', 'target_direction', 'target_return', 'price_range']
+```
+**Sistem Kerja:**
+- Mengkonversi fitur kategorikal ke format numerik
+- Menghapus kolom yang tidak relevan untuk analisis korelasi
+- Memastikan semua fitur dalam format numerik yang sesuai
+
+##### 4.3 Analisis Korelasi dengan Target
+```python
+# Korelasi dengan target
+correlation_with_target = correlation_features.corrwith(df[target]).sort_values(ascending=False)
+```
+**Proses Seleksi:**
+- Menghitung korelasi setiap fitur dengan target (target_nextday_close)
+- Mengurutkan fitur berdasarkan kekuatan korelasinya
+- Memilih 15 fitur teratas berdasarkan nilai absolut korelasi
+
+##### 4.4 Penanganan Multikolinearitas
+[Bagian kode multikolinearitas yang sudah ada tetap dipertahankan]
+
+**Hasil Feature Selection:**
+1. **Top Features Berdasarkan Korelasi**
+   - Dipilih 15 fitur teratas yang memiliki korelasi tertinggi dengan target
+   - Menghilangkan target dari daftar fitur
+   - Memvisualisasikan korelasi menggunakan heatmap
+
+2. **Final Selected Features**
+   - Subset fitur yang telah dibersihkan dari multikolinearitas
+   - Fitur-fitur yang memiliki korelasi signifikan dengan target
+   - Fitur-fitur yang relatif independen satu sama lain
 #### 5. Normalisasi Data
 ```python
 scaler = MinMaxScaler()
