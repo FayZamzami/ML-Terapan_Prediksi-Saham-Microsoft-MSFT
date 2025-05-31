@@ -495,19 +495,39 @@ random_state: Sama seperti Random Forest, parameter ini memastikan hasil yang ko
 **Konsep Dasar:**
 XGBoost adalah implementasi optimized dari gradient boosting machines yang menggabungkan multiple weak learners (decision trees) secara sekuensial dengan fokus pada optimasi dan kinerja.
 
-**Parameter Kunci dan Fungsinya:**
-- `learning_rate=0.1`: Mengontrol kontribusi setiap tree
-  * Nilai kecil = model lebih robust tapi butuh lebih banyak trees
-- `n_estimators=100`: Jumlah boosting rounds
-  * Dapat dikombinasikan dengan early stopping
-- `max_depth=6`: Kedalaman maksimum tree
-  * Mengontrol kompleksitas model
-- `min_child_weight=1`: Minimum sum of instance weight dalam child
-  * Membantu mengontrol over-fitting
-- `subsample=0.8`: Fraksi sampel yang digunakan per tree
-  * Menambah randomness untuk mencegah overfitting
-- `colsample_bytree=0.8`: Fraksi fitur per tree
-  * Mirip dengan random feature selection di Random Forest
+**Implementasi Model:**
+```python
+model_xgb = XGBRegressor(
+    n_estimators=100,
+    learning_rate=0.1,
+    random_state=42
+)
+```
+
+**Parameter yang Digunakan:**
+1. Parameter yang Diatur Secara Eksplisit:
+   - `n_estimators=100`: Jumlah boosting rounds (pohon)
+   - `learning_rate=0.1`: Tingkat pembelajaran
+   - `random_state=42`: Seed untuk reproduktifitas hasil
+
+2. Parameter Default yang Digunakan:
+   - `max_depth=3`: Kedalaman maksimum setiap pohon
+   - `min_child_weight=1`: Minimum sum of instance weight dalam child
+   - `subsample=1.0`: Fraksi sampel yang digunakan per tree
+   - `colsample_bytree=1.0`: Fraksi fitur yang digunakan per tree
+
+**Fungsi Parameter:**
+1. Parameter yang Diatur:
+   - `n_estimators`: Menentukan jumlah pohon boosting yang akan dibangun secara berurutan. Nilai 100 memberikan keseimbangan antara performa dan waktu komputasi.
+   - `learning_rate`: Mengontrol kontribusi setiap pohon terhadap prediksi akhir. Nilai 0.1 memberikan pembelajaran yang stabil.
+   - `random_state`: Memastikan hasil yang konsisten dan dapat direproduksi.
+
+2. Parameter Default:
+   - `max_depth=3`: Mengontrol kompleksitas model dengan membatasi kedalaman pohon.
+   - `min_child_weight=1`: Membantu mengontrol overfitting dengan menentukan minimum weight di setiap node.
+   - `subsample=1.0`: Menggunakan seluruh dataset untuk setiap pohon.
+   - `colsample_bytree=1.0`: Menggunakan semua fitur untuk setiap pohon.
+
 
 **Cara Kerja Detail:**
 
@@ -566,41 +586,56 @@ XGBoost adalah implementasi optimized dari gradient boosting machines yang mengg
    - Meningkatkan generalisasi untuk prediksi masa depan
 
 ### 4. Gradient Boosting
-**Parameter yang digunakan:**
-- `n_estimators=100`: Jumlah boosting stages
-- `learning_rate=0.1`: Tingkat pembelajaran
-- `random_state=42`: Seed untuk reproduktifitas
-- `max_depth=3`: Kedalaman maksimum setiap tree
-- `min_samples_split=2`: Minimum sampel untuk split internal
-- `min_samples_leaf=1`: Minimum sampel di setiap leaf node
-- `subsample=1.0`: Fraksi sampel untuk fitting
 
-**Fungsi parameter:**
-- `n_estimators`: Mengontrol jumlah pohon boosting yang akan dibangun secara berurutan. Nilai 100 dipilih untuk memberikan cukup iterasi bagi model untuk belajar pola dalam data.
-- `learning_rate`: Mengontrol kontribusi setiap pohon dalam ensemble. Nilai 0.1 adalah default yang memberikan pembelajaran yang stabil.
-- `random_state`: Memastikan hasil yang konsisten dan dapat direproduksi antar running.
-- `max_depth`: Membatasi kedalaman maksimum setiap tree untuk mencegah overfitting.
-- `min_samples_split`: Menentukan jumlah minimum sampel yang diperlukan untuk melakukan split pada node internal.
-- `min_samples_leaf`: Menentukan jumlah minimum sampel yang harus ada pada leaf node.
-- `subsample`: Menentukan fraksi sampel yang digunakan untuk fitting setiap tree.
+**Implementasi Model:**
+```python
+model_gb = GradientBoostingRegressor(
+    n_estimators=100,
+    learning_rate=0.1,
+    random_state=42
+)
+```
 
-**Cara Kerja Detail:**
+**Parameter yang Digunakan:**
+1. Parameter yang Diatur Secara Eksplisit:
+   - `n_estimators=100`: Jumlah boosting stages
+   - `learning_rate=0.1`: Tingkat pembelajaran
+   - `random_state=42`: Seed untuk reproduktifitas
+
+2. Parameter Default yang Digunakan:
+   - `max_depth=3`: Kedalaman maksimum setiap tree
+   - `min_samples_split=2`: Minimum sampel untuk split internal
+   - `min_samples_leaf=1`: Minimum sampel di setiap leaf node
+   - `subsample=1.0`: Fraksi sampel untuk fitting
+
+**Fungsi Parameter:**
+1. Parameter yang Diatur:
+   - `n_estimators`: Mengontrol jumlah pohon boosting yang akan dibangun secara berurutan. Nilai 100 dipilih untuk memberikan cukup iterasi bagi model untuk belajar pola dalam data.
+   - `learning_rate`: Mengontrol kontribusi setiap pohon dalam ensemble. Nilai 0.1 memberikan pembelajaran yang stabil.
+   - `random_state`: Memastikan hasil yang konsisten dan dapat direproduksi.
+
+2. Parameter Default:
+   - `max_depth=3`: Membatasi kedalaman maksimum setiap tree untuk mencegah overfitting.
+   - `min_samples_split=2`: Menentukan jumlah minimum sampel yang diperlukan untuk melakukan split pada node internal.
+   - `min_samples_leaf=1`: Menentukan jumlah minimum sampel yang harus ada pada leaf node.
+   - `subsample=1.0`: Menggunakan seluruh dataset untuk setiap iterasi.
+
+
+**Cara Kerja:**
 1. **Sequential Learning**:
-   - Membangun tree secara berurutan
-   - Setiap tree baru memperbaiki kesalahan tree sebelumnya
-   - Menggunakan gradient descent untuk minimalisasi loss
+   - Model membangun pohon keputusan secara berurutan
+   - Setiap pohon baru fokus pada memperbaiki kesalahan prediksi pohon sebelumnya
+   - Menggunakan gradient descent untuk minimalisasi loss function
 
 2. **Weak Learners**:
-   - Menggunakan decision tree sederhana (shallow trees)
-   - Tree dibatasi kedalaman (`max_depth=3`) untuk mencegah overfitting
-   - Setiap tree harus memenuhi kriteria minimum samples (`min_samples_split` dan `min_samples_leaf`)
-   - Fokus pada generalisasi daripada memorisasi
+   - Menggunakan decision tree sederhana dengan kedalaman default 3
+   - Setiap tree memenuhi kriteria minimum samples default
+   - Fokus pada generalisasi daripada memorisasi data training
 
 3. **Additive Training**:
-   - Model final adalah penjumlahan dari semua tree
-   - Setiap tree diberi bobot sesuai learning rate (0.1)
-   - Proses iteratif untuk meminimalkan loss function
-   - Menggunakan subsample data (100%) untuk setiap tree
+   - Model final adalah penjumlahan dari semua pohon
+   - Setiap pohon diberi bobot sesuai learning rate 0.1
+   - Menggunakan seluruh dataset (subsample=1.0) untuk setiap iterasi
 
 4. **Regularisasi**:
    - Pembatasan kedalaman tree (`max_depth=3`)
